@@ -24,7 +24,7 @@ B.prototype.addA = function() {
 	this.a.value++;
 };
 
-var callback = function(namespace, method, args, invoke) {
+var callback = function(namespace, method, args, attach, invoke) {
 	
 };
 
@@ -67,7 +67,7 @@ describe('local proxy', function() {
 			var expectMethod = "add";
 			var a = new A(1);
 			
-			var cb = function(namespace, method, args, invoke) {
+			var cb = function(namespace, method, args, attach, invoke) {
 				callbackCount++;
 				namespace.should.equal(expectNamespace);
 				method.should.equal(expectMethod);
@@ -94,7 +94,7 @@ describe('local proxy', function() {
 			var callbackCount = 0;
 			var filteredMethod = "add";
 			
-			var cb = function(namespace, method, args, invoke) {
+			var cb = function(namespace, method, args, attach, invoke) {
 				callbackCount++;
 			};
 			var filter = function(namespace, method) {
@@ -121,7 +121,7 @@ describe('local proxy', function() {
 			var originCallCount = 0;
 			var value = 1;
 			
-			var cb = function(namespace, method, args, invoke) {
+			var cb = function(namespace, method, args, attach, invoke) {
 				callbackCount++;
 				invoke(args);
 			};
@@ -149,7 +149,7 @@ describe('local proxy', function() {
 			var originCallCount = 0;
 			var value = 1;
 			
-			var cb = function(namespace, method, args, invoke) {
+			var cb = function(namespace, method, args, attach, invoke) {
 				callbackCount++;
 			};
 			var a = new A(value);
@@ -190,7 +190,7 @@ describe('local proxy', function() {
 			var valueA = 1;
 			var valueB = 2;
 			
-			var cb = function(namespace, method, args, invoke) {
+			var cb = function(namespace, method, args, attach, invoke) {
 				callbackCount++;
 				invoke(args);
 			};
@@ -219,8 +219,7 @@ describe('local proxy', function() {
 			var callbackCount = 0;
 			var value = 1;
 			
-			var cb = function(namespace, method, args, invoke) {
-				console.log(method);
+			var cb = function(namespace, method, args, attach, invoke) {
 				callbackCount++;
 				invoke(args);
 			};
@@ -245,6 +244,27 @@ describe('local proxy', function() {
 			});
 			
 			proxy.should.be.an.instanceof(A);
+		});
+		
+		it('should pass the attach from opts to invoke callback', function() {
+			var callbackCount = 0;
+			var expectAttach = {someValue: 1, someObject: {}, someStr: "hello"};
+			
+			var cb = function(namespace, method, args, attach, invoke) {
+				callbackCount++;
+				should.exist(attach);
+				attach.should.equal(expectAttach);
+			};
+			var a = new A(1);
+			
+			var proxy = LocalProxy.createProxy({
+				origin: a, 
+				callback: cb, 
+				attach: expectAttach
+			});
+			proxy.addInternal(1);
+			
+			callbackCount.should.equal(1);
 		});
 	});
 });
